@@ -6,4 +6,9 @@
         select id, name, age, salary, phone
         from t_user
     </select>
+
+    <insert id="saveUser">
+        insert into t_user(id, name, age, salary, phone) VALUE
+                (#{id}, #{name}, #{age}, #{salary}, #{phone})
+    </insert>
 </mapper>
