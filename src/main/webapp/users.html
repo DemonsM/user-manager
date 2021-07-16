@@ -38,14 +38,15 @@
             <div class="col-md-8 col-md-offset-2">
                 <form class="form-inline">
                     <div class="form-group">
-                        <label for="name">Name</label>
-                        <input class="form-control" id="name" type="text">
+                        <label for="searchName">Name</label>
+                        <input class="form-control" id="searchName" type="text" v-model="searchName">
                     </div>
                     <div class="form-group">
-                        <label for="salary">Salary</label>
-                        <input class="form-control" id="salary" type="text">
+                        <label for="searchPhone">Phone</label>
+                        <input class="form-control" id="searchPhone" type="text" v-model="searchPhone">
                     </div>
-                    <button class="btn btn-default" type="submit">Search</button>
+                    <button @click="search(searchName,searchPhone)" class="btn btn-default" type="button">Search
+                    </button>
                 </form>
             </div>
         </div>
@@ -62,15 +63,15 @@
                         <th>Operate</th>
                     </tr>
                     <tbody>
-                    <tr :key="user.id" v-for="user in userList">
+                    <tr :key="user.id" v-for="user in users">
                         <td>{{user.id}}</td>
                         <td>{{user.name}}</td>
                         <td>{{user.age}}</td>
                         <td>{{user.salary}}</td>
                         <td>{{user.phone}}</td>
                         <td>
-                            <button class="btn btn-info">EDIT</button>&nbsp;&nbsp;<button class="btn btn-danger">DELETE
-                        </button>
+                            <button @click="findUser(user.id)" class="btn btn-info">EDIT</button>&nbsp;&nbsp;
+                            <button @click="deleteUser(user.id)" class="btn btn-danger">DELETE</button>
                         </td>
                     </tr>
                     </tbody>
@@ -81,22 +82,24 @@
                 <form>
                     <div class="form-group">
                         <label for="nameInput">Name</label>
-                        <input class="form-control" id="nameInput" placeholder="Name" type="text">
+                        <input class="form-control" id="nameInput" placeholder="Name" type="text" v-model="user.name">
                     </div>
                     <div class="form-group">
-                        <label for="ageInput">Password</label>
-                        <input class="form-control" id="ageInput" placeholder="Age" type="text">
+                        <label for="ageInput">Age</label>
+                        <input class="form-control" id="ageInput" placeholder="Age" type="text" v-model="user.age">
                     </div>
                     <div class="form-group">
                         <label for="salaryInput">Salary</label>
-                        <input class="form-control" id="salaryInput" placeholder="Salary" type="text">
+                        <input class="form-control" id="salaryInput" placeholder="Salary" type="text"
+                               v-model="user.salary">
                     </div>
                     <div class="form-group">
                         <label for="phoneInput">Phone</label>
-                        <input class="form-control" id="phoneInput" placeholder="Phone" type="text">
+                        <input class="form-control" id="phoneInput" placeholder="Phone" type="text"
+                               v-model="user.phone">
                     </div>
-                    <button class="btn btn-primary" type="submit">Submit</button>
-                    <button class="btn btn-danger" type="reset">Reset</button>
+                    <button @click="saveOrUpdateUser" class="btn btn-primary" type="button">Submit</button>
+                    <button @click="reset" class="btn btn-danger" type="button">Reset</button>
                 </form>
             </div>
         </div>
@@ -109,17 +112,77 @@
     const app = new Vue({
         el: "#app",
         data: {
-            userList: []
+            searchName: "",
+            searchPhone: "",
+            users: [],
+            user: {
+                name: "",
+                age: 0,
+                salary: 0.00,
+                phone: ""
+            }
         },
-        methods: {},
+        methods: {
+            saveOrUpdateUser() {
+                let _this = this;
+                if (this.user.id == null) {
+                    //新增
+                    axios.post('http://localhost:8989/users/createUser', this.user).then(function (response) {
+                        console.log(response.data);
+                        _this.findAll();
+                        _this.reset();
+                    }).catch(function (err) {
+                        console.log(err);
+                    });
+                } else {
+                    //修改
+                    axios.post('http://localhost:8989/users/updateUser?id=' + this.user.id, this.user).then(function (response) {
+                        console.log(response.data);
+                        _this.findAll();
+                        _this.reset();
+                    });
+                }
+            },
+            findAll() {
+                let _this = this;
+                axios.get('http://localhost:8989/users/getAll').then(function (response) {
+                    _this.users = response.data;
+                }).catch(function (err) {
+                    console.log(err);
+                })
+            },
+            reset() {
+                this.user = {};
+            },
+            deleteUser(id) {
+                let _this = this;
+                if (window.confirm("是否确认删除？")) {
+                    axios.delete('http://localhost:8989/users/deleteUser?id=' + id).then(function (response) {
+                        if (response.data.success) {
+                            _this.findAll();
+                        } else {
+                            alert(response.data.message);
+                        }
+                    });
+                }
+            },
+            findUser(id) {
+                let _this = this;
+                axios.get('http://localhost:8989/users/getUser?id=' + id).then(function (response) {
+                    console.log(response.data);
+                    _this.user = response.data;
+                });
+            },
+            search(name, phone) {
+                let _this = this;
+                axios.get('http://localhost:8989/users/search?name=' + name + '&phone=' + phone).then(function (response) {
+                    console.log(response.data);
+                    _this.users = response.data;
+                })
+            }
+        },
         created() {
-            let _this = this;
-            axios.get('http://localhost:8989/users/getAll').then(function (response) {
-                console.log(response.data);
-                _this.userList = response.data;
-            }).catch(function (err) {
-                console.log(err);
-            })
+            this.findAll();
         }
     });
 </script>

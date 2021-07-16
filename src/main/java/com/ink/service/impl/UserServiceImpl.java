@@ -23,4 +23,24 @@ public class UserServiceImpl implements UserService {
     public int saveUser(User user) {
         return userDao.saveUser(user);
     }
+
+    @Override
+    public int deleteUser(Long id) {
+        return userDao.deleteById(id);
+    }
+
+    @Override
+    public User getUserById(Long id) {
+        return userDao.selectOneById(id);
+    }
+
+    @Override
+    public int updateUser(User user, Long id) {
+        return userDao.updateById(user, id);
+    }
+
+    @Override
+    public List<User> selectUserByNameOrPhone(String name, Long phone) {
+        return userDao.selectUserByNameOrPhone(name, phone);
+    }
 }
